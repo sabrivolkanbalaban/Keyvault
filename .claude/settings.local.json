@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh auth status:*)"
+      "Bash(gh auth status:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(git remote add:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(GIT_TERMINAL_PROMPT=1 git push:*)",
+      "Bash(venvScriptspip install -r requirements.txt)",
+      "Bash(FLASK_APP=run.py venv/Scripts/python.exe -m flask:*)"
     ]
   }
 }

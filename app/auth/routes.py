@@ -62,12 +62,26 @@ def login():
             return render_template("auth/login.html")
 
         # Attempt LDAP authentication
-        try:
-            ldap_svc = LDAPService(current_app.config)
-            ad_user = ldap_svc.authenticate(username, password)
-        except Exception:
-            flash("Authentication service unavailable. Please try again later.", "danger")
-            return render_template("auth/login.html")
+        ad_user = None
+        if current_app.debug and username == "admin" and password == "admin":
+            # Dev mode bypass - auto-create admin user without LDAP
+            ad_user = {
+                "username": "admin",
+                "email": "admin@company.local",
+                "full_name": "Admin User",
+                "display_name": "Admin",
+                "department": "IT",
+                "title": "System Administrator",
+                "dn": "CN=admin,DC=company,DC=local",
+                "groups": [],
+            }
+        else:
+            try:
+                ldap_svc = LDAPService(current_app.config)
+                ad_user = ldap_svc.authenticate(username, password)
+            except Exception:
+                flash("Authentication service unavailable. Please try again later.", "danger")
+                return render_template("auth/login.html")
 
         if ad_user is None:
             if user:
@@ -114,6 +128,8 @@ def login():
         role = _map_ad_groups_to_role(ad_user["groups"], current_app.config)
         if role:
             user.role = role
+        elif current_app.debug and username == "admin":
+            user.role = "admin"
 
         db.session.commit()
         login_user(user, remember=remember)

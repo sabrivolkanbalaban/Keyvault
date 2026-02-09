@@ -105,6 +105,86 @@ def toggle_active(user_id):
     return redirect(url_for("admin.users"))
 
 
+@admin_bp.route("/users/new", methods=["GET", "POST"])
+@login_required
+@admin_required
+def create_user():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        full_name = request.form.get("full_name", "").strip()
+        if not username or not full_name:
+            flash("Username and full name are required.", "danger")
+            return render_template("admin/user_form.html", user=None)
+
+        if User.query.filter_by(username=username).first():
+            flash(f"User '{username}' already exists.", "danger")
+            return render_template("admin/user_form.html", user=None)
+
+        user = User(
+            username=username,
+            full_name=full_name,
+            email=request.form.get("email", "").strip() or None,
+            department=request.form.get("department", "").strip() or None,
+            title=request.form.get("title", "").strip() or None,
+            role=request.form.get("role", "user"),
+            is_active=True,
+        )
+        db.session.add(user)
+        db.session.commit()
+
+        AuditService.log(
+            action="user_created",
+            user_id=current_user.id,
+            username=current_user.username,
+            resource_type="user",
+            resource_id=user.id,
+            resource_name=user.username,
+            details=f"Created with role={user.role}",
+        )
+        flash(f"User '{user.username}' created. They can now log in via Active Directory.", "success")
+        return redirect(url_for("admin.users"))
+
+    return render_template("admin/user_form.html", user=None)
+
+
+@admin_bp.route("/users/<int:user_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def edit_user(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        abort(404)
+
+    if request.method == "POST":
+        full_name = request.form.get("full_name", "").strip()
+        if not full_name:
+            flash("Full name is required.", "danger")
+            return render_template("admin/user_form.html", user=user)
+
+        user.full_name = full_name
+        user.email = request.form.get("email", "").strip() or None
+        user.department = request.form.get("department", "").strip() or None
+        user.title = request.form.get("title", "").strip() or None
+
+        if user.id != current_user.id:
+            user.role = request.form.get("role", user.role)
+
+        db.session.commit()
+
+        AuditService.log(
+            action="user_updated",
+            user_id=current_user.id,
+            username=current_user.username,
+            resource_type="user",
+            resource_id=user.id,
+            resource_name=user.username,
+        )
+        flash(f"User '{user.username}' updated.", "success")
+        return redirect(url_for("admin.users"))
+
+    return render_template("admin/user_form.html", user=user)
+
+
 @admin_bp.route("/groups")
 @login_required
 @admin_required
