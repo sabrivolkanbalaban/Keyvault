@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if folder else 'New' }} Folder - KeyVault{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('folders.list_folders') }}" class="text-muted text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>Back to Folders
+    </a>
+    <h4 class="fw-bold mt-1">{{ 'Edit' if folder else 'New' }} Folder</h4>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name"
+                               value="{{ folder.name if folder else '' }}" required maxlength="100">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Description</label>
+                        <input type="text" class="form-control" id="description" name="description"
+                               value="{{ folder.description if folder and folder.description else '' }}" maxlength="500">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="parent_id" class="form-label fw-semibold">Parent Folder</label>
+                        <select class="form-select" id="parent_id" name="parent_id">
+                            <option value="">No parent (root)</option>
+                            {% for pf in parent_folders %}
+                            <option value="{{ pf.id }}"
+                                    {{ 'selected' if folder and folder.parent_id == pf.id }}>
+                                {{ pf.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="icon" class="form-label fw-semibold">Icon</label>
+                            <select class="form-select" id="icon" name="icon">
+                                <option value="folder" {{ 'selected' if not folder or folder.icon == 'folder' }}>Folder</option>
+                                <option value="server" {{ 'selected' if folder and folder.icon == 'server' }}>Server</option>
+                                <option value="cloud" {{ 'selected' if folder and folder.icon == 'cloud' }}>Cloud</option>
+                                <option value="database" {{ 'selected' if folder and folder.icon == 'database' }}>Database</option>
+                                <option value="globe" {{ 'selected' if folder and folder.icon == 'globe' }}>Globe</option>
+                                <option value="shield-lock" {{ 'selected' if folder and folder.icon == 'shield-lock' }}>Security</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="color" class="form-label fw-semibold">Color</label>
+                            <input type="color" class="form-control form-control-color" id="color" name="color"
+                                   value="{{ folder.color if folder else '#6c757d' }}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Update' if folder else 'Create' }} Folder
+                        </button>
+                        <a href="{{ url_for('folders.list_folders') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

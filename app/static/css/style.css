@@ -1,0 +1,57 @@
+/* KeyVault Custom Styles */
+
+/* Smooth transitions */
+.card {
+    transition: box-shadow 0.2s ease;
+}
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Secret card link styling */
+.card a.text-dark:hover {
+    color: var(--bs-primary) !important;
+}
+
+/* Password field monospace */
+.secret-password {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    letter-spacing: 2px;
+}
+
+/* Sidebar scrollable */
+.sidebar {
+    overflow-y: auto;
+}
+
+/* Badge category */
+.badge-category {
+    font-weight: 500;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* Tooltip on copy */
+.copy-btn.copied::after {
+    content: 'Copied!';
+    position: absolute;
+    top: -30px;
+    background: #333;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* Responsive sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+        position: relative;
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}

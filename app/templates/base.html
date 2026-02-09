@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KeyVault{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+        }
+        body {
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background: #1a1d23;
+        }
+        .sidebar .nav-link {
+            color: #9ca3af;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.375rem;
+            margin: 2px 8px;
+            font-size: 0.9rem;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        .sidebar .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        .sidebar-brand {
+            padding: 1.2rem 1.2rem;
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-section {
+            color: #6b7280;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.2rem 0.3rem;
+            font-weight: 600;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+        .top-navbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.6rem 1.5rem;
+        }
+        .content-area {
+            padding: 1.5rem;
+        }
+        .card {
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .secret-password {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .badge-category {
+            font-size: 0.75rem;
+        }
+        .copy-btn {
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            color: var(--bs-primary);
+        }
+        .strength-weak { color: #dc3545; }
+        .strength-medium { color: #ffc107; }
+        .strength-strong { color: #198754; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Sidebar -->
+    <nav class="sidebar d-flex flex-column">
+        <a href="{{ url_for('dashboard.index') }}" class="sidebar-brand">
+            <i class="bi bi-shield-lock-fill"></i>
+            KeyVault
+        </a>
+
+        <div class="flex-grow-1 py-2">
+            <div class="sidebar-section">Main</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">
+                        <i class="bi bi-speedometer2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('secrets.') %}active{% endif %}"
+                       href="{{ url_for('secrets.list_secrets') }}">
+                        <i class="bi bi-key-fill"></i>Secrets
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('folders.') %}active{% endif %}"
+                       href="{{ url_for('folders.list_folders') }}">
+                        <i class="bi bi-folder-fill"></i>Folders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'generator.index' %}active{% endif %}"
+                       href="{{ url_for('generator.index') }}">
+                        <i class="bi bi-dice-5-fill"></i>Generator
+                    </a>
+                </li>
+            </ul>
+
+            {% if current_user.is_admin() %}
+            <div class="sidebar-section">Admin</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}"
+                       href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people-fill"></i>Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.groups' %}active{% endif %}"
+                       href="{{ url_for('admin.groups') }}">
+                        <i class="bi bi-diagram-3-fill"></i>Groups
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('audit.') %}active{% endif %}"
+                       href="{{ url_for('audit.logs') }}">
+                        <i class="bi bi-clock-history"></i>Audit Logs
+                    </a>
+                </li>
+            </ul>
+            {% else %}
+            <div class="sidebar-section">Activity</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'audit.my_logs' %}active{% endif %}"
+                       href="{{ url_for('audit.my_logs') }}">
+                        <i class="bi bi-clock-history"></i>My Activity
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+
+        <div class="p-3 border-top border-secondary">
+            <div class="d-flex align-items-center text-white small">
+                <i class="bi bi-person-circle me-2"></i>
+                <div class="flex-grow-1 text-truncate">
+                    <div class="fw-semibold">{{ current_user.display_name or current_user.full_name }}</div>
+                    <div class="text-muted small">{{ current_user.role }}</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <nav class="top-navbar d-flex align-items-center justify-content-between">
+            <form class="d-flex" action="{{ url_for('secrets.list_secrets') }}" method="get" style="width: 400px;">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="q" placeholder="Search secrets..."
+                           value="{{ request.args.get('q', '') }}">
+                </div>
+            </form>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('secrets.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>New Secret
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-box-arrow-right me-1"></i>Logout
+                </a>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% else %}
+    {% block unauthenticated_content %}{% endblock %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Copy to clipboard utility
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(function() {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                setTimeout(function() { btn.innerHTML = original; }, 1500);
+            });
+        }
+
+        // Toggle password visibility
+        function togglePassword(fieldId, btn) {
+            const field = document.getElementById(fieldId);
+            if (field.type === 'password') {
+                field.type = 'text';
+                btn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+            } else {
+                field.type = 'password';
+                btn.innerHTML = '<i class="bi bi-eye"></i>';
+            }
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
