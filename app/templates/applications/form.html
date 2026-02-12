@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if app else 'New' }} Application - KeyVault{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('applications.list_applications') }}" class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i>Back to Applications
+    </a>
+</div>
+
+<h4 class="fw-bold mb-4">{{ 'Edit Application' if app else 'New Application' }}</h4>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Basic Information -->
+                    <h6 class="fw-semibold text-muted mb-3">Basic Information</h6>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Application Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ app.name if app else '' }}">
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="server_name" class="form-label">Server Name</label>
+                            <input type="text" class="form-control" id="server_name" name="server_name"
+                                   value="{{ app.server_name if app else '' }}"
+                                   placeholder="e.g. SRV-APP-01">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ip_address" class="form-label">IP Address</label>
+                            <input type="text" class="form-control" id="ip_address" name="ip_address"
+                                   value="{{ app.ip_address if app else '' }}"
+                                   placeholder="e.g. 192.168.1.100">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="port" class="form-label">Port</label>
+                            <input type="number" class="form-control" id="port" name="port" min="1" max="65535"
+                                   value="{{ app.port if app and app.port else '' }}"
+                                   placeholder="e.g. 8080">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="url" class="form-label">URL</label>
+                            <input type="url" class="form-control" id="url" name="url"
+                                   value="{{ app.url if app else '' }}"
+                                   placeholder="https://app.company.com">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            {% for val, label in status_choices %}
+                            <option value="{{ val }}" {{ 'selected' if app and app.status == val else 'selected' if not app and val == 'active' else '' }}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2">{{ app.description if app else '' }}</textarea>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <h6 class="fw-semibold text-muted mb-3 mt-4">Technical Details</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="operating_system" class="form-label">Operating System</label>
+                            <input type="text" class="form-control" id="operating_system" name="operating_system"
+                                   value="{{ app.operating_system if app else '' }}"
+                                   placeholder="e.g. Windows Server 2022, Ubuntu 22.04">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="platform" class="form-label">Platform</label>
+                            <select class="form-select" id="platform" name="platform">
+                                <option value="">-- Select --</option>
+                                {% for val, label in platform_choices %}
+                                <option value="{{ val }}" {{ 'selected' if app and app.platform == val else '' }}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="database_type" class="form-label">Database</label>
+                            <input type="text" class="form-control" id="database_type" name="database_type"
+                                   value="{{ app.database_type if app else '' }}"
+                                   placeholder="e.g. MSSQL, PostgreSQL, Oracle">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="app_version" class="form-label">Version</label>
+                            <input type="text" class="form-control" id="app_version" name="app_version"
+                                   value="{{ app.app_version if app else '' }}"
+                                   placeholder="e.g. 2.1.0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="deployment_type" class="form-label">Deployment Type</label>
+                        <select class="form-select" id="deployment_type" name="deployment_type">
+                            <option value="">-- Select --</option>
+                            {% for val, label in deployment_choices %}
+                            <option value="{{ val }}" {{ 'selected' if app and app.deployment_type == val else '' }}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Management -->
+                    <h6 class="fw-semibold text-muted mb-3 mt-4">Management</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="responsible_person" class="form-label">Responsible Person</label>
+                            <input type="text" class="form-control" id="responsible_person" name="responsible_person"
+                                   value="{{ app.responsible_person if app else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department</label>
+                            <input type="text" class="form-control" id="department" name="department"
+                                   value="{{ app.department if app else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sla_level" class="form-label">SLA Level</label>
+                            <select class="form-select" id="sla_level" name="sla_level">
+                                <option value="">-- Select --</option>
+                                {% for val, label in sla_choices %}
+                                <option value="{{ val }}" {{ 'selected' if app and app.sla_level == val else '' }}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="criticality" class="form-label">Criticality</label>
+                            <select class="form-select" id="criticality" name="criticality">
+                                <option value="">-- Select --</option>
+                                {% for val, label in criticality_choices %}
+                                <option value="{{ val }}" {{ 'selected' if app and app.criticality == val else '' }}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="maintenance_date" class="form-label">Maintenance Date</label>
+                        <input type="date" class="form-control" id="maintenance_date" name="maintenance_date"
+                               value="{{ app.maintenance_date.strftime('%Y-%m-%d') if app and app.maintenance_date else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ app.notes if app else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Update Application' if app else 'Create Application' }}
+                        </button>
+                        <a href="{{ url_for('applications.detail', app_id=app.id) if app else url_for('applications.list_applications') }}"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

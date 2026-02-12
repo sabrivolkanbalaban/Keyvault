@@ -129,6 +129,18 @@
                         <i class="bi bi-dice-5-fill"></i>Generator
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('licenses.') and request.endpoint != 'licenses.my_licenses' %}active{% endif %}"
+                       href="{{ url_for('licenses.list_licenses') }}">
+                        <i class="bi bi-patch-check-fill"></i>Licenses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('applications.') %}active{% endif %}"
+                       href="{{ url_for('applications.list_applications') }}">
+                        <i class="bi bi-server"></i>Applications
+                    </a>
+                </li>
             </ul>
 
             {% if current_user.is_admin() %}
@@ -152,6 +164,12 @@
                         <i class="bi bi-clock-history"></i>Audit Logs
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('oracle_admin.') %}active{% endif %}"
+                       href="{{ url_for('oracle_admin.index') }}">
+                        <i class="bi bi-database-fill-gear"></i>Oracle Privileges
+                    </a>
+                </li>
             </ul>
             {% else %}
             <div class="sidebar-section">Activity</div>
@@ -160,6 +178,12 @@
                     <a class="nav-link {% if request.endpoint == 'audit.my_logs' %}active{% endif %}"
                        href="{{ url_for('audit.my_logs') }}">
                         <i class="bi bi-clock-history"></i>My Activity
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'licenses.my_licenses' %}active{% endif %}"
+                       href="{{ url_for('licenses.my_licenses') }}">
+                        <i class="bi bi-patch-check"></i>My Licenses
                     </a>
                 </li>
             </ul>

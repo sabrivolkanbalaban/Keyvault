@@ -40,8 +40,12 @@ class User(UserMixin, db.Model):
     )
 
     def is_locked(self):
-        if self.locked_until and self.locked_until > datetime.now(timezone.utc):
-            return True
+        if self.locked_until:
+            now = datetime.now(timezone.utc)
+            locked = self.locked_until
+            if locked.tzinfo is None:
+                locked = locked.replace(tzinfo=timezone.utc)
+            return locked > now
         return False
 
     def is_admin(self):

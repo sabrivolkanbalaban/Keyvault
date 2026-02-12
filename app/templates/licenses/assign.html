@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Assign User - {{ license.name }} - KeyVault{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('licenses.detail', license_id=license.id) }}" class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i>Back to {{ license.name }}
+    </a>
+</div>
+
+<h4 class="fw-bold mb-4">Assign User to License</h4>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-semibold">{{ license.name }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="assigned_to" class="form-label">User Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="assigned_to" name="assigned_to" required
+                               placeholder="e.g. John Doe">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="machine_name" class="form-label">Machine Name</label>
+                        <input type="text" class="form-control" id="machine_name" name="machine_name"
+                               placeholder="e.g. WORKSTATION-01">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <input type="text" class="form-control" id="notes" name="notes"
+                               placeholder="Optional notes about this assignment">
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus me-1"></i>Assign User
+                        </button>
+                        <a href="{{ url_for('licenses.detail', license_id=license.id) }}"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-semibold">Seat Utilization</h6>
+            </div>
+            <div class="card-body">
+                {% if license.seat_count %}
+                <div class="text-center mb-3">
+                    <div class="fs-2 fw-bold">{{ license.used_seats }}<small class="text-muted fs-5">/{{ license.seat_count }}</small></div>
+                    <small class="text-muted">seats used</small>
+                </div>
+                <div class="progress mb-2" style="height: 10px;">
+                    <div class="progress-bar {{ 'bg-danger' if license.utilization_percent and license.utilization_percent >= 90 else 'bg-warning' if license.utilization_percent and license.utilization_percent >= 70 else 'bg-success' }}"
+                         style="width: {{ license.utilization_percent or 0 }}%"></div>
+                </div>
+                <div class="text-center">
+                    <span class="badge bg-{{ 'danger' if license.available_seats == 0 else 'success' }}">
+                        {{ license.available_seats }} seat{{ 's' if license.available_seats != 1 }} available
+                    </span>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <div class="fs-2 fw-bold">{{ license.used_seats }}</div>
+                    <small class="text-muted">seats used (unlimited)</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

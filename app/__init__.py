@@ -49,6 +49,9 @@ def create_app(config_name="production"):
     from app.views.admin import admin_bp
     from app.views.audit import audit_bp
     from app.views.generator import generator_bp
+    from app.views.oracle_admin import oracle_admin_bp
+    from app.views.licenses import licenses_bp
+    from app.views.applications import applications_bp
     from app.api.v1 import api_v1_bp
 
     app.register_blueprint(auth_bp)
@@ -58,6 +61,9 @@ def create_app(config_name="production"):
     app.register_blueprint(admin_bp)
     app.register_blueprint(audit_bp)
     app.register_blueprint(generator_bp)
+    app.register_blueprint(oracle_admin_bp)
+    app.register_blueprint(licenses_bp)
+    app.register_blueprint(applications_bp)
     app.register_blueprint(api_v1_bp, url_prefix="/api/v1")
 
     # Exempt API from CSRF (uses token auth)

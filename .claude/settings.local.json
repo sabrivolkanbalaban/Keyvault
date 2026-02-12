@@ -8,7 +8,9 @@
       "Bash(git remote set-url:*)",
       "Bash(GIT_TERMINAL_PROMPT=1 git push:*)",
       "Bash(venvScriptspip install -r requirements.txt)",
-      "Bash(FLASK_APP=run.py venv/Scripts/python.exe -m flask:*)"
+      "Bash(FLASK_APP=run.py venv/Scripts/python.exe -m flask:*)",
+      "Bash(findstr:*)",
+      "Bash(python -c \"\nimport pymssql\nconn = pymssql.connect\\(server=''172.22.15.8'', user=''customappuser'', password=''Kemer19054191523!!!'', port=1433, autocommit=True\\)\ncursor = conn.cursor\\(\\)\ncursor.execute\\(\"\"IF NOT EXISTS \\(SELECT name FROM sys.databases WHERE name = ''KeyVault''\\) CREATE DATABASE KeyVault\"\"\\)\nprint\\(''Database KeyVault created or already exists.''\\)\ncursor.close\\(\\)\nconn.close\\(\\)\n\")"
     ]
   }
 }

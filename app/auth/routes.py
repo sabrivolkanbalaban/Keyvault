@@ -79,8 +79,9 @@ def login():
             try:
                 ldap_svc = LDAPService(current_app.config)
                 ad_user = ldap_svc.authenticate(username, password)
-            except Exception:
-                flash("Authentication service unavailable. Please try again later.", "danger")
+            except Exception as e:
+                current_app.logger.error(f"LDAP auth error for {username}: {e}")
+                flash(f"Authentication service error: {e}", "danger")
                 return render_template("auth/login.html")
 
         if ad_user is None:
@@ -124,12 +125,10 @@ def login():
         user.failed_login_attempts = 0
         user.locked_until = None
 
-        # Map AD groups to roles
+        # Map AD groups to roles (only update if a mapping is found)
         role = _map_ad_groups_to_role(ad_user["groups"], current_app.config)
         if role:
             user.role = role
-        elif current_app.debug and username == "admin":
-            user.role = "admin"
 
         db.session.commit()
         login_user(user, remember=remember)

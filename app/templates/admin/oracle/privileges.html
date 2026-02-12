@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Oracle Privileges - KeyVault{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    .user-list .list-group-item {
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    .user-list .list-group-item:hover {
+        background: #e9ecef;
+    }
+    .user-list .list-group-item.active {
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .privilege-badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-database-fill-gear me-2"></i>Oracle Privilege Management
+    </h4>
+</div>
+
+<div class="row">
+    <!-- Left: Oracle Users -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header py-2">
+                <strong class="small">Oracle Users</strong>
+            </div>
+            <div class="card-body p-2">
+                <form method="get" class="mb-2">
+                    <input type="text" class="form-control form-control-sm" name="q"
+                           placeholder="Search users..." value="{{ search_query }}">
+                </form>
+                <div class="user-list list-group list-group-flush">
+                    {% for u in oracle_users %}
+                    <a href="{{ url_for('oracle_admin.index', user=u.username, q=search_query) }}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ 'active' if selected_user == u.username }}">
+                        <span>{{ u.username }}</span>
+                        <span class="badge bg-{{ 'success' if u.account_status == 'OPEN' else 'secondary' }} privilege-badge">
+                            {{ u.account_status }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                    {% if not oracle_users %}
+                    <div class="text-muted small text-center py-3">No users found.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Privileges + Grant Form -->
+    <div class="col-md-9">
+        {% if selected_user %}
+        <!-- Grant Privilege Form -->
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <strong class="small">Grant Privilege to {{ selected_user }}</strong>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('oracle_admin.grant') }}" id="grantForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="grantee" value="{{ selected_user }}">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Schema</label>
+                            <select name="schema" id="schemaSelect" class="form-select form-select-sm" required>
+                                <option value="">Select schema...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Table / View</label>
+                            <select name="object_name" id="objectSelect" class="form-select form-select-sm" required disabled>
+                                <option value="">Select schema first...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Privileges</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="privileges" value="SELECT" id="privSelect">
+                                    <label class="form-check-label small" for="privSelect">SELECT</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="privileges" value="INSERT" id="privInsert">
+                                    <label class="form-check-label small" for="privInsert">INSERT</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="privileges" value="UPDATE" id="privUpdate">
+                                    <label class="form-check-label small" for="privUpdate">UPDATE</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="privileges" value="DELETE" id="privDelete">
+                                    <label class="form-check-label small" for="privDelete">DELETE</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="bi bi-plus-lg"></i> Grant
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Privileges Table -->
+        <div class="card">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <strong class="small">Current Privileges for {{ selected_user }}</strong>
+                <span class="badge bg-primary">{{ privileges|length }} privileges</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="small">Schema</th>
+                            <th class="small">Object</th>
+                            <th class="small">Type</th>
+                            <th class="small">Privilege</th>
+                            <th class="small">Grantor</th>
+                            <th class="small">Grantable</th>
+                            <th class="small">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for priv in privileges %}
+                        <tr>
+                            <td class="small">{{ priv.owner }}</td>
+                            <td class="small fw-semibold">{{ priv.table_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'info' if priv.type == 'VIEW' else 'warning' }} privilege-badge">
+                                    {{ priv.type or 'TABLE' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary privilege-badge">{{ priv.privilege }}</span>
+                            </td>
+                            <td class="small">{{ priv.grantor }}</td>
+                            <td>
+                                {% if priv.grantable == 'YES' %}
+                                <span class="badge bg-success privilege-badge">YES</span>
+                                {% else %}
+                                <span class="badge bg-secondary privilege-badge">NO</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="post" action="{{ url_for('oracle_admin.revoke') }}" class="d-inline"
+                                      onsubmit="return confirm('Revoke {{ priv.privilege }} on {{ priv.owner }}.{{ priv.table_name }} from {{ selected_user }}?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="grantee" value="{{ selected_user }}">
+                                    <input type="hidden" name="schema" value="{{ priv.owner }}">
+                                    <input type="hidden" name="object_name" value="{{ priv.table_name }}">
+                                    <input type="hidden" name="privilege" value="{{ priv.privilege }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Revoke">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not privileges %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-shield-x me-1"></i>No privileges found for {{ selected_user }}.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <!-- No user selected -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-person-badge display-4 text-muted"></i>
+                <p class="text-muted mt-3">Select an Oracle user from the list to view and manage privileges.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const schemaSelect = document.getElementById('schemaSelect');
+    const objectSelect = document.getElementById('objectSelect');
+
+    // Load schemas on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!schemaSelect) return;
+
+        fetch('{{ url_for("oracle_admin.schemas") }}')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    data.schemas.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s;
+                        opt.textContent = s;
+                        schemaSelect.appendChild(opt);
+                    });
+                }
+            })
+            .catch(err => console.error('Failed to load schemas:', err));
+    });
+
+    // Load objects when schema changes
+    if (schemaSelect) {
+        schemaSelect.addEventListener('change', function() {
+            const schema = this.value;
+            objectSelect.innerHTML = '<option value="">Loading...</option>';
+            objectSelect.disabled = true;
+
+            if (!schema) {
+                objectSelect.innerHTML = '<option value="">Select schema first...</option>';
+                return;
+            }
+
+            fetch(`{{ url_for("oracle_admin.objects", schema="__SCHEMA__") }}`.replace('__SCHEMA__', schema))
+                .then(r => r.json())
+                .then(data => {
+                    objectSelect.innerHTML = '<option value="">Select table/view...</option>';
+                    if (data.success) {
+                        data.objects.forEach(obj => {
+                            const opt = document.createElement('option');
+                            opt.value = obj.object_name;
+                            opt.textContent = `${obj.object_name} (${obj.object_type})`;
+                            objectSelect.appendChild(opt);
+                        });
+                    }
+                    objectSelect.disabled = false;
+                })
+                .catch(err => {
+                    objectSelect.innerHTML = '<option value="">Error loading objects</option>';
+                    console.error('Failed to load objects:', err);
+                });
+        });
+    }
+
+    // Form validation
+    const grantForm = document.getElementById('grantForm');
+    if (grantForm) {
+        grantForm.addEventListener('submit', function(e) {
+            const checked = document.querySelectorAll('input[name="privileges"]:checked');
+            if (checked.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one privilege.');
+            }
+        });
+    }
+</script>
+{% endblock %}

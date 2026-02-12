@@ -3,6 +3,8 @@ from flask_login import current_user, login_required
 
 from app.models.secret import Secret
 from app.models.audit_log import AuditLog
+from app.services.application_service import ApplicationService
+from app.services.license_service import LicenseService
 from app.services.notification_service import NotificationService
 
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -37,10 +39,16 @@ def index():
     # Recent secrets
     recent_secrets = (
         Secret.query.filter_by(owner_id=current_user.id)
-        .order_by(Secret.updated_at.desc().nullsfirst(), Secret.created_at.desc())
+        .order_by(Secret.created_at.desc())
         .limit(10)
         .all()
     )
+
+    # License stats
+    license_stats = LicenseService.get_dashboard_stats()
+
+    # Application stats
+    app_stats = ApplicationService.get_dashboard_stats()
 
     return render_template(
         "dashboard/index.html",
@@ -49,4 +57,6 @@ def index():
         expiring_secrets=expiring,
         recent_logs=recent_logs,
         recent_secrets=recent_secrets,
+        license_stats=license_stats,
+        app_stats=app_stats,
     )

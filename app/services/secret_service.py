@@ -54,7 +54,7 @@ class SecretService:
                 )
             )
 
-        return query.order_by(Secret.updated_at.desc().nullsfirst(), Secret.created_at.desc()).paginate(
+        return query.order_by(Secret.created_at.desc()).paginate(
             page=page, per_page=per_page, error_out=False
         )
 

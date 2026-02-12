@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if license else 'New' }} License - KeyVault{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('licenses.list_licenses') }}" class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i>Back to Licenses
+    </a>
+</div>
+
+<h4 class="fw-bold mb-4">{{ 'Edit License' if license else 'New License' }}</h4>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Basic Info -->
+                    <h6 class="fw-semibold text-muted mb-3">Basic Information</h6>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ license.name if license else '' }}">
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="vendor" class="form-label">Vendor</label>
+                            <input type="text" class="form-control" id="vendor" name="vendor"
+                                   value="{{ license.vendor if license else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="version" class="form-label">Version</label>
+                            <input type="text" class="form-control" id="version" name="version"
+                                   value="{{ license.version if license else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="license_type" class="form-label">License Type</label>
+                        <select class="form-select" id="license_type" name="license_type">
+                            {% for type_val, type_label in license_types %}
+                            <option value="{{ type_val }}" {{ 'selected' if license and license.license_type == type_val else 'selected' if not license and type_val == 'perpetual' else '' }}>
+                                {{ type_label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2">{{ license.description if license else '' }}</textarea>
+                    </div>
+
+                    <!-- License Key -->
+                    <h6 class="fw-semibold text-muted mb-3 mt-4">License Key</h6>
+
+                    <div class="mb-3">
+                        <label for="license_key" class="form-label">
+                            License Key / Serial Number
+                            {% if license %}
+                            <small class="text-muted">(leave blank to keep current)</small>
+                            {% endif %}
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control font-monospace" id="license_key" name="license_key"
+                                   placeholder="{{ '••••••••' if license and license.encrypted_license_key else '' }}">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('license_key', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Seats & Financial -->
+                    <h6 class="fw-semibold text-muted mb-3 mt-4">Seats & Financial</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="seat_count" class="form-label">Seat Count</label>
+                            <input type="number" class="form-control" id="seat_count" name="seat_count" min="0"
+                                   value="{{ license.seat_count if license and license.seat_count else '' }}"
+                                   placeholder="Empty = Unlimited">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cost" class="form-label">Cost</label>
+                            <input type="number" class="form-control" id="cost" name="cost" step="0.01" min="0"
+                                   value="{{ license.cost if license and license.cost else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="currency" class="form-label">Currency</label>
+                            <select class="form-select" id="currency" name="currency">
+                                <option value="USD" {{ 'selected' if not license or license.currency == 'USD' }}>USD</option>
+                                <option value="EUR" {{ 'selected' if license and license.currency == 'EUR' }}>EUR</option>
+                                <option value="TRY" {{ 'selected' if license and license.currency == 'TRY' }}>TRY</option>
+                                <option value="GBP" {{ 'selected' if license and license.currency == 'GBP' }}>GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="purchase_order" class="form-label">Purchase Order #</label>
+                        <input type="text" class="form-control" id="purchase_order" name="purchase_order"
+                               value="{{ license.purchase_order if license else '' }}">
+                    </div>
+
+                    <!-- Dates -->
+                    <h6 class="fw-semibold text-muted mb-3 mt-4">Dates</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="purchase_date" class="form-label">Purchase Date</label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date"
+                                   value="{{ license.purchase_date.strftime('%Y-%m-%d') if license and license.purchase_date else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="expiration_date" class="form-label">Expiration Date</label>
+                            <input type="date" class="form-control" id="expiration_date" name="expiration_date"
+                                   value="{{ license.expiration_date.strftime('%Y-%m-%d') if license and license.expiration_date else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="support_expiration_date" class="form-label">Support Expiration</label>
+                            <input type="date" class="form-control" id="support_expiration_date" name="support_expiration_date"
+                                   value="{{ license.support_expiration_date.strftime('%Y-%m-%d') if license and license.support_expiration_date else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Contact & Organization -->
+                    <h6 class="fw-semibold text-muted mb-3 mt-4">Contact & Organization</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="vendor_contact" class="form-label">Vendor Contact</label>
+                            <input type="text" class="form-control" id="vendor_contact" name="vendor_contact"
+                                   value="{{ license.vendor_contact if license else '' }}"
+                                   placeholder="Email or phone">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="support_plan" class="form-label">Support Plan</label>
+                            <input type="text" class="form-control" id="support_plan" name="support_plan"
+                                   value="{{ license.support_plan if license else '' }}"
+                                   placeholder="e.g. Premium, Standard">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="department" name="department"
+                               value="{{ license.department if license else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ license.notes if license else '' }}</textarea>
+                    </div>
+
+                    {% if license %}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                   {{ 'checked' if license.is_active }}>
+                            <label class="form-check-label" for="is_active">Active</label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ 'Update License' if license else 'Create License' }}
+                        </button>
+                        <a href="{{ url_for('licenses.detail', license_id=license.id) if license else url_for('licenses.list_licenses') }}"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

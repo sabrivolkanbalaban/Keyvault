@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Licenses - KeyVault{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Licenses</h4>
+    {% if current_user.is_admin() %}
+    <a href="{{ url_for('licenses.create') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>New License
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" action="{{ url_for('licenses.list_licenses') }}" class="d-flex align-items-center gap-2">
+            <div class="input-group input-group-sm" style="max-width: 300px;">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" name="q" placeholder="Search licenses..."
+                       value="{{ search_query }}">
+            </div>
+            {% if search_query %}
+            <a href="{{ url_for('licenses.list_licenses') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-muted small me-1">Status:</span>
+            <a href="{{ url_for('licenses.list_licenses', q=search_query, license_type=current_type) }}"
+               class="btn btn-sm {{ 'btn-primary' if not current_status else 'btn-outline-secondary' }}">
+                All
+            </a>
+            <a href="{{ url_for('licenses.list_licenses', status='active', q=search_query, license_type=current_type) }}"
+               class="btn btn-sm {{ 'btn-success' if current_status == 'active' else 'btn-outline-secondary' }}">
+                Active
+            </a>
+            <a href="{{ url_for('licenses.list_licenses', status='expiring_soon', q=search_query, license_type=current_type) }}"
+               class="btn btn-sm {{ 'btn-warning' if current_status == 'expiring_soon' else 'btn-outline-secondary' }}">
+                Expiring Soon
+            </a>
+            <a href="{{ url_for('licenses.list_licenses', status='expired', q=search_query, license_type=current_type) }}"
+               class="btn btn-sm {{ 'btn-danger' if current_status == 'expired' else 'btn-outline-secondary' }}">
+                Expired
+            </a>
+            <a href="{{ url_for('licenses.list_licenses', status='inactive', q=search_query, license_type=current_type) }}"
+               class="btn btn-sm {{ 'btn-secondary' if current_status == 'inactive' else 'btn-outline-secondary' }}">
+                Inactive
+            </a>
+
+            <div class="vr mx-1"></div>
+
+            <span class="text-muted small me-1">Type:</span>
+            <a href="{{ url_for('licenses.list_licenses', q=search_query, status=current_status) }}"
+               class="btn btn-sm {{ 'btn-primary' if not current_type else 'btn-outline-secondary' }}">
+                All
+            </a>
+            {% for type_val, type_label in license_types[:6] %}
+            <a href="{{ url_for('licenses.list_licenses', license_type=type_val, q=search_query, status=current_status) }}"
+               class="btn btn-sm {{ 'btn-primary' if current_type == type_val else 'btn-outline-secondary' }}">
+                {{ type_label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- License List -->
+{% if licenses %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Vendor</th>
+                    <th>Type</th>
+                    <th>Seats</th>
+                    <th>Expiration</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lic in licenses %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('licenses.detail', license_id=lic.id) }}" class="text-decoration-none fw-semibold">
+                            {{ lic.name }}
+                        </a>
+                        {% if lic.version %}
+                        <small class="text-muted">v{{ lic.version }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ lic.vendor or '-' }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'primary' if lic.license_type == 'perpetual' else 'info' if lic.license_type == 'subscription' else 'warning text-dark' if lic.license_type == 'trial' else 'dark' if lic.license_type == 'enterprise' else 'success' if lic.license_type == 'volume' else 'secondary' }}">
+                            {{ lic.license_type }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if lic.seat_count %}
+                        <div class="d-flex align-items-center gap-2" style="min-width: 120px;">
+                            <div class="progress flex-grow-1" style="height: 6px;">
+                                <div class="progress-bar {{ 'bg-danger' if lic.utilization_percent and lic.utilization_percent >= 90 else 'bg-warning' if lic.utilization_percent and lic.utilization_percent >= 70 else 'bg-success' }}"
+                                     style="width: {{ lic.utilization_percent or 0 }}%"></div>
+                            </div>
+                            <small class="text-muted text-nowrap">{{ lic.used_seats }}/{{ lic.seat_count }}</small>
+                        </div>
+                        {% else %}
+                        <small class="text-muted">Unlimited</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if lic.expiration_date %}
+                        <small class="{{ 'text-danger fw-semibold' if lic.is_expired else 'text-warning' if lic.is_expiring_soon else '' }}">
+                            {{ lic.expiration_date.strftime('%Y-%m-%d') }}
+                        </small>
+                        {% else %}
+                        <small class="text-muted">No expiry</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if lic.status_label == 'active' else 'danger' if lic.status_label == 'expired' else 'warning text-dark' if lic.status_label == 'expiring_soon' else 'secondary' }}">
+                            {{ lic.status_label | replace('_', ' ') | title }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('licenses.detail', license_id=lic.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if current_user.is_admin() %}
+                        <a href="{{ url_for('licenses.edit', license_id=lic.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+            <a class="page-link" href="{{ url_for('licenses.list_licenses', page=pagination.prev_num, license_type=current_type, status=current_status, q=search_query) }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <li class="page-item {{ 'active' if p == pagination.page }}">
+            <a class="page-link" href="{{ url_for('licenses.list_licenses', page=p, license_type=current_type, status=current_status, q=search_query) }}">{{ p }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+            <a class="page-link" href="{{ url_for('licenses.list_licenses', page=pagination.next_num, license_type=current_type, status=current_status, q=search_query) }}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-patch-check" style="font-size: 3rem;"></i>
+    <p class="mt-3">No licenses found.</p>
+    {% if current_user.is_admin() %}
+    <a href="{{ url_for('licenses.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Your First License
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

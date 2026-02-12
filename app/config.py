@@ -23,6 +23,13 @@ class BaseConfig:
     LDAP_USER_GROUPS = os.environ.get("LDAP_USER_GROUPS", "").split(",")
     LDAP_READONLY_GROUPS = os.environ.get("LDAP_READONLY_GROUPS", "").split(",")
 
+    # Oracle Database
+    ORACLE_HOST = os.environ.get("ORACLE_HOST", "")
+    ORACLE_PORT = int(os.environ.get("ORACLE_PORT", "1521"))
+    ORACLE_SERVICE = os.environ.get("ORACLE_SERVICE", "")
+    ORACLE_USER = os.environ.get("ORACLE_USER", "")
+    ORACLE_PASSWORD = os.environ.get("ORACLE_PASSWORD", "")
+
     # Session
     SESSION_TIMEOUT_MINUTES = int(os.environ.get("SESSION_TIMEOUT_MINUTES", "30"))
     PERMANENT_SESSION_LIFETIME = timedelta(
@@ -51,10 +58,10 @@ class DevelopmentConfig(BaseConfig):
 class ProductionConfig(BaseConfig):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
 
 class TestingConfig(BaseConfig):
