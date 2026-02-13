@@ -104,40 +104,50 @@ def login():
             return render_template("auth/login.html")
 
         # Upsert user in local DB
-        if not user:
-            user = User(
-                username=ad_user["username"],
-                full_name=ad_user["full_name"],
-                role="user",
+        try:
+            if not user:
+                user = User(
+                    username=ad_user["username"],
+                    full_name=ad_user["full_name"],
+                    role="user",
+                )
+                db.session.add(user)
+
+            # Sync AD attributes (only overwrite with non-None values)
+            if ad_user["email"]:
+                user.email = ad_user["email"]
+            user.full_name = ad_user["full_name"]
+            if ad_user["display_name"]:
+                user.display_name = ad_user["display_name"]
+            if ad_user["department"]:
+                user.department = ad_user["department"]
+            if ad_user["title"]:
+                user.title = ad_user["title"]
+            user.ad_dn = ad_user["dn"]
+            user.ad_domain = current_app.config["LDAP_DOMAIN"]
+            user.last_login_at = datetime.now(timezone.utc)
+            user.last_login_ip = request.remote_addr
+            user.failed_login_attempts = 0
+            user.locked_until = None
+
+            # Map AD groups to roles (only update if a mapping is found)
+            role = _map_ad_groups_to_role(ad_user["groups"], current_app.config)
+            if role:
+                user.role = role
+
+            db.session.commit()
+            login_user(user, remember=remember)
+            AuditService.log(
+                "login",
+                user_id=user.id,
+                username=user.username,
+                ip=request.remote_addr,
             )
-            db.session.add(user)
-
-        # Sync AD attributes
-        user.email = ad_user["email"]
-        user.full_name = ad_user["full_name"]
-        user.display_name = ad_user["display_name"]
-        user.department = ad_user["department"]
-        user.title = ad_user["title"]
-        user.ad_dn = ad_user["dn"]
-        user.ad_domain = current_app.config["LDAP_DOMAIN"]
-        user.last_login_at = datetime.now(timezone.utc)
-        user.last_login_ip = request.remote_addr
-        user.failed_login_attempts = 0
-        user.locked_until = None
-
-        # Map AD groups to roles (only update if a mapping is found)
-        role = _map_ad_groups_to_role(ad_user["groups"], current_app.config)
-        if role:
-            user.role = role
-
-        db.session.commit()
-        login_user(user, remember=remember)
-        AuditService.log(
-            "login",
-            user_id=user.id,
-            username=user.username,
-            ip=request.remote_addr,
-        )
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Login DB error for {username}: {e}")
+            flash(f"Login error: {e}", "danger")
+            return render_template("auth/login.html")
 
         next_page = request.args.get("next")
         if next_page and not next_page.startswith("/"):

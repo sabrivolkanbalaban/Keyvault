@@ -1,0 +1,29 @@
+Note: Unnecessary use of -X or --request, POST is already inferred.
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0*   Trying 172.22.15.7:4141...
+* Established connection to 172.22.15.7 (172.22.15.7 port 4141) from 10.199.3.42 port 52636 
+* using HTTP/1.x
+> POST /auth/login HTTP/1.1
+> Host: 172.22.15.7:4141
+> User-Agent: curl/8.18.0
+> Accept: */*
+> Cookie: session=eyJfZnJlc2giOmZhbHNlLCJfcGVybWFuZW50Ijp0cnVlLCJjc3JmX3Rva2VuIjoiMjdhNzBmNzExODJlMDI4ZGU0ZjhmNjNiMDFjNjMwMmRkOGZhNjVkNCJ9.aY7vdw.QLowQSSI8R6WQtv2eovNqGywvr8
+> Content-Length: 149
+> Content-Type: application/x-www-form-urlencoded
+> 
+} [149 bytes data]
+* upload completely sent off: 149 bytes
+< HTTP/1.1 500 INTERNAL SERVER ERROR
+< Content-Type: text/html; charset=utf-8
+< Vary: Cookie
+< Server: Microsoft-IIS/8.5
+* Replaced cookie session="eyJfZnJlc2giOmZhbHNlLCJfcGVybWFuZW50Ijp0cnVlLCJjc3JmX3Rva2VuIjoiMjdhNzBmNzExODJlMDI4ZGU0ZjhmNjNiMDFjNjMwMmRkOGZhNjVkNCJ9.aY7vgA.Yu47CBjPxpQQKpsdG42pk52L1X0" for domain 172.22.15.7, path /, expire 1770976904
+< Set-Cookie: session=eyJfZnJlc2giOmZhbHNlLCJfcGVybWFuZW50Ijp0cnVlLCJjc3JmX3Rva2VuIjoiMjdhNzBmNzExODJlMDI4ZGU0ZjhmNjNiMDFjNjMwMmRkOGZhNjVkNCJ9.aY7vgA.Yu47CBjPxpQQKpsdG42pk52L1X0; Expires=Fri, 13 Feb 2026 10:01:44 GMT; HttpOnly; Path=/; SameSite=Lax
+< X-Powered-By: ASP.NET
+< Date: Fri, 13 Feb 2026 09:31:44 GMT
+< Content-Length: 265
+< 
+{ [265 bytes data]
+100    414 100    265 100    149   2334   1312                              0100    414 100    265 100    149   2309   1298                              0100    414 100    265 100    149   2284   1284                              0
+* Connection #0 to host 172.22.15.7:4141 left intact

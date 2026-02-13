@@ -83,4 +83,17 @@ def create_app(config_name="production"):
 
         session.permanent = True
 
+    # Error logging for production
+    import logging
+
+    log_dir = os.path.join(os.path.dirname(app.root_path), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, "app_error.log")
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.ERROR)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]")
+    )
+    app.logger.addHandler(file_handler)
+
     return app
